@@ -22,8 +22,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header title={title} toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
         
-        <main className="flex-1 overflow-y-auto p-6 transition-all-medium">
-          <div className="container mx-auto animate-fade-in">
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="container mx-auto">
             {children}
           </div>
         </main>
