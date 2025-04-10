@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DataTable from '../../ui-elements/DataTable';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -93,49 +93,71 @@ const CallsTableSection: React.FC<CallsTableSectionProps> = ({
     }
   ];
 
-  // Action handlers that use React.useCallback to prevent unnecessary re-renders
-  const handleViewDetails = React.useCallback((row: CallData) => {
+  // Action handlers with useCallback to prevent unnecessary re-renders
+  const handleViewDetails = useCallback((row: CallData) => {
     onViewDetails(row);
   }, [onViewDetails]);
 
-  const handleUpdateStatus = React.useCallback((row: CallData) => {
+  const handleUpdateStatus = useCallback((row: CallData) => {
     onUpdateStatus(row);
   }, [onUpdateStatus]);
 
-  // Define the action menus with memoization
-  const renderRecentActions = React.useCallback((row: CallData) => (
+  // Define action menu renderers with proper memoization
+  const renderRecentActions = useCallback((row: CallData, closeMenu: () => void) => (
     <>
-      <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
-      <DropdownMenuItem onClick={() => handleUpdateStatus(row)}>Update Status</DropdownMenuItem>
-      <DropdownMenuItem>Call Back</DropdownMenuItem>
-      <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => { handleViewDetails(row); closeMenu(); }}>
+        View Details
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => { handleUpdateStatus(row); closeMenu(); }}>
+        Update Status
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => closeMenu()}>
+        Call Back
+      </DropdownMenuItem>
+      <DropdownMenuItem className="text-destructive" onClick={() => closeMenu()}>
+        Escalate
+      </DropdownMenuItem>
     </>
   ), [handleViewDetails, handleUpdateStatus]);
 
-  const renderResolvedActions = React.useCallback((row: CallData) => (
+  const renderResolvedActions = useCallback((row: CallData, closeMenu: () => void) => (
     <>
-      <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
-      <DropdownMenuItem>Reopen Case</DropdownMenuItem>
-      <DropdownMenuItem>Call Back</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => { handleViewDetails(row); closeMenu(); }}>
+        View Details
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => closeMenu()}>
+        Reopen Case
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => closeMenu()}>
+        Call Back
+      </DropdownMenuItem>
     </>
   ), [handleViewDetails]);
 
-  const renderPendingActions = React.useCallback((row: CallData) => (
+  const renderPendingActions = useCallback((row: CallData, closeMenu: () => void) => (
     <>
-      <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
-      <DropdownMenuItem onClick={() => handleUpdateStatus(row)}>Mark as Resolved</DropdownMenuItem>
-      <DropdownMenuItem>Call Back</DropdownMenuItem>
-      <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => { handleViewDetails(row); closeMenu(); }}>
+        View Details
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => { handleUpdateStatus(row); closeMenu(); }}>
+        Mark as Resolved
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => closeMenu()}>
+        Call Back
+      </DropdownMenuItem>
+      <DropdownMenuItem className="text-destructive" onClick={() => closeMenu()}>
+        Escalate
+      </DropdownMenuItem>
     </>
   ), [handleViewDetails, handleUpdateStatus]);
 
   // Filter data once to avoid recalculations
-  const resolvedCalls = React.useMemo(() => 
+  const resolvedCalls = useMemo(() => 
     callsData.filter(call => call.status === 'Resolved'),
     [callsData]
   );
   
-  const pendingCalls = React.useMemo(() => 
+  const pendingCalls = useMemo(() => 
     callsData.filter(call => call.status === 'Pending'),
     [callsData]
   );

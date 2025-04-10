@@ -31,7 +31,7 @@ interface DataTableProps {
   isLoading?: boolean;
   pageSize?: number;
   filterPlaceholder?: string;
-  actions?: (row: any) => React.ReactNode;
+  actions?: (row: any, closeMenu: () => void) => React.ReactNode;
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -103,6 +103,11 @@ const DataTable: React.FC<DataTableProps> = ({
 
   // Reset active row when closed
   const handleDropdownClose = useCallback(() => {
+    setActiveRow(null);
+  }, []);
+
+  // Function to close menu that can be passed to actions
+  const closeMenu = useCallback(() => {
     setActiveRow(null);
   }, []);
 
@@ -187,8 +192,12 @@ const DataTable: React.FC<DataTableProps> = ({
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onInteractOutside={handleDropdownClose}>
-                            {actions(row)}
+                          <DropdownMenuContent 
+                            align="end" 
+                            onInteractOutside={handleDropdownClose}
+                            className="bg-background border-border"
+                          >
+                            {actions(row, closeMenu)}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
