@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Phone, Clock, CheckSquare, UserSquare2, PhoneForwarded, PhoneOff, Timer } from 'lucide-react';
 import DashboardLayout from '../layout/DashboardLayout';
 import KPICard from '../ui-elements/KPICard';
@@ -7,8 +7,17 @@ import DataTable from '../ui-elements/DataTable';
 import Chart from '../ui-elements/Chart';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CallDetailsModal from '../modals/CallDetailsModal';
+import UpdateStatusForm from '../forms/UpdateStatusForm';
+import { useToast } from '@/hooks/use-toast';
 
 const RMDashboard: React.FC = () => {
+  // State for modals and forms
+  const [selectedCall, setSelectedCall] = useState<any>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
+  const { toast } = useToast();
+
   // Sample data for KPIs
   const kpiData = [
     {
@@ -63,7 +72,7 @@ const RMDashboard: React.FC = () => {
   ];
 
   // Sample data for calls table
-  const callsData = [
+  const [callsData, setCallsData] = useState([
     {
       id: '1001',
       startTime: '09:45 AM',
@@ -72,7 +81,8 @@ const RMDashboard: React.FC = () => {
       contact: '+1 (555) 123-4567',
       issueType: 'Billing Inquiry',
       status: 'Resolved',
-      satisfaction: 5
+      satisfaction: 5,
+      notes: 'Customer had questions about recent charges. Explained the billing cycle and resolved their concerns.'
     },
     {
       id: '1002',
@@ -82,7 +92,8 @@ const RMDashboard: React.FC = () => {
       contact: '+1 (555) 987-6543',
       issueType: 'Technical Support',
       status: 'Pending',
-      satisfaction: 4
+      satisfaction: 4,
+      notes: 'Customer experiencing intermittent connection issues. Provided basic troubleshooting steps.'
     },
     {
       id: '1003',
@@ -92,7 +103,8 @@ const RMDashboard: React.FC = () => {
       contact: '+1 (555) 456-7890',
       issueType: 'Product Information',
       status: 'Resolved',
-      satisfaction: 5
+      satisfaction: 5,
+      notes: 'Customer inquired about product features. Provided detailed information and answered all questions.'
     },
     {
       id: '1004',
@@ -102,7 +114,8 @@ const RMDashboard: React.FC = () => {
       contact: '+1 (555) 789-0123',
       issueType: 'Account Access',
       status: 'Escalated',
-      satisfaction: 3
+      satisfaction: 3,
+      notes: 'Customer unable to access their account. Basic troubleshooting failed. Escalated to technical team.'
     },
     {
       id: '1005',
@@ -112,7 +125,8 @@ const RMDashboard: React.FC = () => {
       contact: '+1 (555) 321-6547',
       issueType: 'Billing Inquiry',
       status: 'Resolved',
-      satisfaction: 4
+      satisfaction: 4,
+      notes: 'Customer had questions about a specific charge. Explained the service and resolved the inquiry.'
     },
     {
       id: '1006',
@@ -122,9 +136,34 @@ const RMDashboard: React.FC = () => {
       contact: '+1 (555) 654-7891',
       issueType: 'Technical Support',
       status: 'Pending',
-      satisfaction: 4
+      satisfaction: 4,
+      notes: 'Customer reporting slow performance. Provided initial guidance and will follow up tomorrow.'
     }
-  ];
+  ]);
+
+  // Handler functions
+  const handleViewDetails = (call: any) => {
+    setSelectedCall(call);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleUpdateStatus = (call: any) => {
+    setSelectedCall(call);
+    setIsUpdateStatusOpen(true);
+  };
+
+  const handleStatusUpdate = (data: any) => {
+    setCallsData(callsData.map(call => 
+      call.id === selectedCall.id 
+        ? { ...call, status: data.status, notes: data.notes ? `${call.notes}\n\nUpdate: ${data.notes}` : call.notes } 
+        : call
+    ));
+    
+    toast({
+      title: "Status updated",
+      description: `Call #${selectedCall.id} status has been updated to ${data.status}`,
+    });
+  };
 
   // Call volume chart data
   const callVolumeData = [
@@ -313,8 +352,8 @@ const RMDashboard: React.FC = () => {
                 columns={columns}
                 actions={(row) => (
                   <>
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>Update Status</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleUpdateStatus(row)}>Update Status</DropdownMenuItem>
                     <DropdownMenuItem>Call Back</DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
                   </>
@@ -328,7 +367,7 @@ const RMDashboard: React.FC = () => {
                 columns={columns}
                 actions={(row) => (
                   <>
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
                     <DropdownMenuItem>Reopen Case</DropdownMenuItem>
                     <DropdownMenuItem>Call Back</DropdownMenuItem>
                   </>
@@ -342,8 +381,8 @@ const RMDashboard: React.FC = () => {
                 columns={columns}
                 actions={(row) => (
                   <>
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleUpdateStatus(row)}>Mark as Resolved</DropdownMenuItem>
                     <DropdownMenuItem>Call Back</DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
                   </>
@@ -353,6 +392,20 @@ const RMDashboard: React.FC = () => {
           </Tabs>
         </section>
       </div>
+      
+      {/* Modals */}
+      <CallDetailsModal 
+        isOpen={isDetailsModalOpen} 
+        onClose={() => setIsDetailsModalOpen(false)} 
+        callData={selectedCall} 
+      />
+      
+      <UpdateStatusForm 
+        isOpen={isUpdateStatusOpen} 
+        onClose={() => setIsUpdateStatusOpen(false)} 
+        callData={selectedCall} 
+        onUpdateStatus={handleStatusUpdate} 
+      />
     </DashboardLayout>
   );
 };
