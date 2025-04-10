@@ -1,14 +1,15 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   Table,
-  TableHeader,
+  TableHeader as UITableHeader,
   TableRow,
 } from "@/components/ui/table";
 
 // Import refactored components
 import TableFilters from './table/TableFilters';
 import TablePagination from './table/TablePagination';
-import TableHeader from './table/TableHeader';
+import TableHeaderComponent from './table/TableHeader';
 import TableBody from './table/TableBody';
 
 interface Column {
@@ -111,10 +112,10 @@ const DataTable: React.FC<DataTableProps> = ({
       <div className="rounded-lg border border-border overflow-hidden transition-all-medium">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader>
+            <UITableHeader>
               <TableRow>
                 {columns.map((column) => (
-                  <TableHeader
+                  <TableHeaderComponent
                     key={column.key}
                     column={column}
                     sortKey={sortKey}
@@ -124,7 +125,7 @@ const DataTable: React.FC<DataTableProps> = ({
                 ))}
                 {actions && <th className="w-10"></th>}
               </TableRow>
-            </TableHeader>
+            </UITableHeader>
             
             <TableBody
               isLoading={isLoading}
