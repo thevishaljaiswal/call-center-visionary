@@ -1,21 +1,15 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, ChevronDown, ChevronUp, MoreHorizontal } from 'lucide-react';
+
+// Import refactored components
+import TableFilters from './table/TableFilters';
+import TablePagination from './table/TablePagination';
+import TableHeader from './table/TableHeader';
+import TableBody from './table/TableBody';
 
 interface Column {
   key: string;
@@ -90,12 +84,6 @@ const DataTable: React.FC<DataTableProps> = ({
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedData = sortedData.slice(startIndex, startIndex + pageSize);
 
-  // Sort icon
-  const renderSortIcon = useCallback((key: string) => {
-    if (sortKey !== key) return null;
-    return sortDirection === 'asc' ? <ChevronDown size={14} /> : <ChevronUp size={14} />;
-  }, [sortKey, sortDirection]);
-
   // Handle dropdown menu
   const handleDropdownClick = useCallback((index: number) => {
     setActiveRow(prevActiveRow => prevActiveRow === index ? null : index);
@@ -106,28 +94,19 @@ const DataTable: React.FC<DataTableProps> = ({
     setActiveRow(null);
   }, []);
 
-  // Function to close menu that can be passed to actions
-  const closeMenu = useCallback(() => {
-    setActiveRow(null);
+  // Handle filter change
+  const handleFilterChange = useCallback((value: string) => {
+    setFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
   }, []);
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="flex justify-between">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder={filterPlaceholder}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg bg-background"
-          />
-        </div>
-        <Button variant="outline" size="sm" className="flex items-center">
-          <SlidersHorizontal size={14} className="mr-2" />
-          Filters
-        </Button>
-      </div>
+      <TableFilters 
+        filter={filter} 
+        onFilterChange={handleFilterChange} 
+        filterPlaceholder={filterPlaceholder} 
+      />
 
       <div className="rounded-lg border border-border overflow-hidden transition-all-medium">
         <div className="overflow-x-auto">
@@ -135,109 +114,39 @@ const DataTable: React.FC<DataTableProps> = ({
             <TableHeader>
               <TableRow>
                 {columns.map((column) => (
-                  <TableHead 
+                  <TableHeader
                     key={column.key}
-                    className={column.sortable ? 'cursor-pointer select-none' : ''}
-                    onClick={() => column.sortable && handleSort(column.key)}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>{column.header}</span>
-                      {column.sortable && renderSortIcon(column.key)}
-                    </div>
-                  </TableHead>
+                    column={column}
+                    sortKey={sortKey}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  />
                 ))}
-                {actions && <TableHead className="w-10"></TableHead>}
+                {actions && <th className="w-10"></th>}
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-10">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <div className="w-6 h-6 border-2 border-t-primary rounded-full animate-spin mb-2"></div>
-                      <p>Loading data...</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : paginatedData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-10">
-                    <p className="text-muted-foreground">No records found</p>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedData.map((row, rowIndex) => (
-                  <TableRow key={rowIndex} className="hover:bg-muted/40 transition-colors">
-                    {columns.map((column) => (
-                      <TableCell key={`${rowIndex}-${column.key}`}>
-                        {column.cell 
-                          ? column.cell(row[column.key]) 
-                          : row[column.key] || '—'}
-                      </TableCell>
-                    ))}
-                    {actions && (
-                      <TableCell className="text-right">
-                        <DropdownMenu 
-                          open={activeRow === rowIndex} 
-                          onOpenChange={(open) => {
-                            if (open) {
-                              handleDropdownClick(rowIndex);
-                            } else {
-                              handleDropdownClose();
-                            }
-                          }}
-                        >
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            align="end" 
-                            onInteractOutside={handleDropdownClose}
-                            className="bg-background border-border"
-                          >
-                            {actions(row, closeMenu)}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
+            
+            <TableBody
+              isLoading={isLoading}
+              paginatedData={paginatedData}
+              columns={columns}
+              activeRow={activeRow}
+              onRowAction={handleDropdownClick}
+              onCloseMenu={handleDropdownClose}
+              actions={actions}
+            />
           </Table>
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1}-{Math.min(startIndex + pageSize, sortedData.length)} of {sortedData.length} records
-          </p>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronDown className="h-4 w-4 rotate-90" />
-            </Button>
-            <span className="text-sm">{currentPage} / {totalPages}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronDown className="h-4 w-4 -rotate-90" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        startIndex={startIndex}
+        pageSize={pageSize}
+        totalItems={sortedData.length}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
