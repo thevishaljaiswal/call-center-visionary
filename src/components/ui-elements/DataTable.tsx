@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -47,44 +47,64 @@ const DataTable: React.FC<DataTableProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
+  const [activeRow, setActiveRow] = useState<number | null>(null);
 
-  const handleSort = (key: string) => {
+  // Handle sort logic
+  const handleSort = useCallback((key: string) => {
     if (sortKey === key) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortKey(key);
       setSortDirection('asc');
     }
-  };
+  }, [sortKey, sortDirection]);
 
-  const filteredData = data.filter(row => {
-    if (!filter) return true;
-    
-    return Object.values(row).some(value => 
-      value && value.toString().toLowerCase().includes(filter.toLowerCase())
-    );
-  });
+  // Filter data
+  const filteredData = useMemo(() => {
+    return data.filter(row => {
+      if (!filter) return true;
+      
+      return Object.values(row).some(value => 
+        value && value.toString().toLowerCase().includes(filter.toLowerCase())
+      );
+    });
+  }, [data, filter]);
 
-  const sortedData = [...filteredData].sort((a, b) => {
-    if (!sortKey) return 0;
+  // Sort data
+  const sortedData = useMemo(() => {
+    if (!sortKey) return filteredData;
     
-    const aValue = a[sortKey];
-    const bValue = b[sortKey];
-    
-    if (aValue === bValue) return 0;
-    
-    const compareResult = aValue > bValue ? 1 : -1;
-    return sortDirection === 'asc' ? compareResult : -compareResult;
-  });
+    return [...filteredData].sort((a, b) => {
+      const aValue = a[sortKey];
+      const bValue = b[sortKey];
+      
+      if (aValue === bValue) return 0;
+      
+      const compareResult = aValue > bValue ? 1 : -1;
+      return sortDirection === 'asc' ? compareResult : -compareResult;
+    });
+  }, [filteredData, sortKey, sortDirection]);
 
+  // Pagination
   const totalPages = Math.ceil(sortedData.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedData = sortedData.slice(startIndex, startIndex + pageSize);
 
-  const renderSortIcon = (key: string) => {
+  // Sort icon
+  const renderSortIcon = useCallback((key: string) => {
     if (sortKey !== key) return null;
     return sortDirection === 'asc' ? <ChevronDown size={14} /> : <ChevronUp size={14} />;
-  };
+  }, [sortKey, sortDirection]);
+
+  // Handle dropdown menu
+  const handleDropdownClick = useCallback((index: number) => {
+    setActiveRow(prevActiveRow => prevActiveRow === index ? null : index);
+  }, []);
+
+  // Reset active row when closed
+  const handleDropdownClose = useCallback(() => {
+    setActiveRow(null);
+  }, []);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -152,13 +172,22 @@ const DataTable: React.FC<DataTableProps> = ({
                     ))}
                     {actions && (
                       <TableCell className="text-right">
-                        <DropdownMenu>
+                        <DropdownMenu 
+                          open={activeRow === rowIndex} 
+                          onOpenChange={(open) => {
+                            if (open) {
+                              handleDropdownClick(rowIndex);
+                            } else {
+                              handleDropdownClose();
+                            }
+                          }}
+                        >
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" onInteractOutside={handleDropdownClose}>
                             {actions(row)}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -204,4 +233,4 @@ const DataTable: React.FC<DataTableProps> = ({
   );
 };
 
-export default DataTable;
+export default React.memo(DataTable);

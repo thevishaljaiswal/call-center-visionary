@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DataTable from '../../ui-elements/DataTable';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -93,6 +93,53 @@ const CallsTableSection: React.FC<CallsTableSectionProps> = ({
     }
   ];
 
+  // Action handlers that use React.useCallback to prevent unnecessary re-renders
+  const handleViewDetails = React.useCallback((row: CallData) => {
+    onViewDetails(row);
+  }, [onViewDetails]);
+
+  const handleUpdateStatus = React.useCallback((row: CallData) => {
+    onUpdateStatus(row);
+  }, [onUpdateStatus]);
+
+  // Define the action menus with memoization
+  const renderRecentActions = React.useCallback((row: CallData) => (
+    <>
+      <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => handleUpdateStatus(row)}>Update Status</DropdownMenuItem>
+      <DropdownMenuItem>Call Back</DropdownMenuItem>
+      <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
+    </>
+  ), [handleViewDetails, handleUpdateStatus]);
+
+  const renderResolvedActions = React.useCallback((row: CallData) => (
+    <>
+      <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
+      <DropdownMenuItem>Reopen Case</DropdownMenuItem>
+      <DropdownMenuItem>Call Back</DropdownMenuItem>
+    </>
+  ), [handleViewDetails]);
+
+  const renderPendingActions = React.useCallback((row: CallData) => (
+    <>
+      <DropdownMenuItem onClick={() => handleViewDetails(row)}>View Details</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => handleUpdateStatus(row)}>Mark as Resolved</DropdownMenuItem>
+      <DropdownMenuItem>Call Back</DropdownMenuItem>
+      <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
+    </>
+  ), [handleViewDetails, handleUpdateStatus]);
+
+  // Filter data once to avoid recalculations
+  const resolvedCalls = React.useMemo(() => 
+    callsData.filter(call => call.status === 'Resolved'),
+    [callsData]
+  );
+  
+  const pendingCalls = React.useMemo(() => 
+    callsData.filter(call => call.status === 'Pending'),
+    [callsData]
+  );
+
   return (
     <section>
       <Tabs defaultValue="recent">
@@ -109,43 +156,23 @@ const CallsTableSection: React.FC<CallsTableSectionProps> = ({
           <DataTable
             data={callsData}
             columns={columns}
-            actions={(row) => (
-              <>
-                <DropdownMenuItem onClick={() => onViewDetails(row)}>View Details</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onUpdateStatus(row)}>Update Status</DropdownMenuItem>
-                <DropdownMenuItem>Call Back</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
-              </>
-            )}
+            actions={renderRecentActions}
           />
         </TabsContent>
         
         <TabsContent value="resolved" className="mt-0">
           <DataTable
-            data={callsData.filter(call => call.status === 'Resolved')}
+            data={resolvedCalls}
             columns={columns}
-            actions={(row) => (
-              <>
-                <DropdownMenuItem onClick={() => onViewDetails(row)}>View Details</DropdownMenuItem>
-                <DropdownMenuItem>Reopen Case</DropdownMenuItem>
-                <DropdownMenuItem>Call Back</DropdownMenuItem>
-              </>
-            )}
+            actions={renderResolvedActions}
           />
         </TabsContent>
         
         <TabsContent value="pending" className="mt-0">
           <DataTable
-            data={callsData.filter(call => call.status === 'Pending')}
+            data={pendingCalls}
             columns={columns}
-            actions={(row) => (
-              <>
-                <DropdownMenuItem onClick={() => onViewDetails(row)}>View Details</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onUpdateStatus(row)}>Mark as Resolved</DropdownMenuItem>
-                <DropdownMenuItem>Call Back</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">Escalate</DropdownMenuItem>
-              </>
-            )}
+            actions={renderPendingActions}
           />
         </TabsContent>
       </Tabs>
@@ -153,4 +180,4 @@ const CallsTableSection: React.FC<CallsTableSectionProps> = ({
   );
 };
 
-export default CallsTableSection;
+export default React.memo(CallsTableSection);
