@@ -17,7 +17,7 @@ const RMDashboard: React.FC = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const { toast } = useToast();
-  const { callsData, handleStatusUpdate } = useCallsData();
+  const { callsData, handleStatusUpdate: updateCallStatus } = useCallsData();
 
   // Handler functions
   const handleViewDetails = (call: CallData) => {
@@ -30,9 +30,9 @@ const RMDashboard: React.FC = () => {
     setIsUpdateStatusOpen(true);
   };
 
-  const handleStatusUpdate = (data: any) => {
+  const handleFormStatusUpdate = (data: { status: string; notes?: string }) => {
     if (selectedCall) {
-      const success = handleStatusUpdate(selectedCall, data);
+      const success = updateCallStatus(selectedCall, data);
       
       if (success) {
         toast({
@@ -71,7 +71,7 @@ const RMDashboard: React.FC = () => {
         isOpen={isUpdateStatusOpen} 
         onClose={() => setIsUpdateStatusOpen(false)} 
         callData={selectedCall} 
-        onUpdateStatus={handleStatusUpdate} 
+        onUpdateStatus={handleFormStatusUpdate} 
       />
     </DashboardLayout>
   );
