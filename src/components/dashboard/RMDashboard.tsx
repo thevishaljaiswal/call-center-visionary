@@ -30,9 +30,9 @@ const RMDashboard: React.FC = () => {
     setIsUpdateStatusOpen(true);
   };
 
-  const handleFormStatusUpdate = (data: { status: string; notes?: string }) => {
-    if (selectedCall) {
-      const success = updateCallStatus(selectedCall, data);
+  const handleFormStatusUpdate = (data: { status?: "Resolved" | "Pending" | "Escalated"; notes?: string }) => {
+    if (selectedCall && data.status) {
+      const success = updateCallStatus(selectedCall, { status: data.status, notes: data.notes });
       
       if (success) {
         toast({

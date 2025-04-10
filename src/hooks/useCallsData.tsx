@@ -83,6 +83,8 @@ export interface CallData {
   notes: string;
 }
 
+export type CallStatus = "Resolved" | "Pending" | "Escalated";
+
 export function useCallsData() {
   const [callsData, setCallsData] = useState<CallData[]>(initialCallsData);
 
