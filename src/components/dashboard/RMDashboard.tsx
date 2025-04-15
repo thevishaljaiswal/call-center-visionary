@@ -47,27 +47,27 @@ const RMDashboard: React.FC = () => {
   return (
     <DashboardLayout title="Relationship Manager Dashboard">
       <div className="space-y-6">
-        {/* KPI Section */}
+        {/* Top Section with KPIs */}
         <KPISection />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {/* Charts */}
+        {/* Middle Section with Charts and To-Do List */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2">
             <ChartsSection />
-
-            {/* Calls Table */}
-            <CallsTableSection 
-              callsData={callsData}
-              onViewDetails={handleViewDetails}
-              onUpdateStatus={handleUpdateStatus}
-            />
           </div>
           
-          {/* Todo Section */}
+          {/* Todo Section - Moved to the right column */}
           <div>
             <TodoSection limit={5} />
           </div>
         </div>
+        
+        {/* Bottom Section with Calls Table */}
+        <CallsTableSection 
+          callsData={callsData}
+          onViewDetails={handleViewDetails}
+          onUpdateStatus={handleUpdateStatus}
+        />
       </div>
       
       {/* Modals */}
