@@ -10,6 +10,7 @@ import { useCallsData, CallData } from '@/hooks/useCallsData';
 import KPISection from './sections/KPISection';
 import ChartsSection from './sections/ChartsSection';
 import CallsTableSection from './sections/CallsTableSection';
+import TodoSection from './sections/TodoSection';
 
 const RMDashboard: React.FC = () => {
   // State for modals and forms
@@ -49,15 +50,24 @@ const RMDashboard: React.FC = () => {
         {/* KPI Section */}
         <KPISection />
 
-        {/* Charts */}
-        <ChartsSection />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Charts */}
+            <ChartsSection />
 
-        {/* Calls Table */}
-        <CallsTableSection 
-          callsData={callsData}
-          onViewDetails={handleViewDetails}
-          onUpdateStatus={handleUpdateStatus}
-        />
+            {/* Calls Table */}
+            <CallsTableSection 
+              callsData={callsData}
+              onViewDetails={handleViewDetails}
+              onUpdateStatus={handleUpdateStatus}
+            />
+          </div>
+          
+          {/* Todo Section */}
+          <div>
+            <TodoSection limit={5} />
+          </div>
+        </div>
       </div>
       
       {/* Modals */}

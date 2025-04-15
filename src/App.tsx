@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import RMDashboard from "./components/dashboard/RMDashboard";
 import TLDashboard from "./components/dashboard/TLDashboard";
 import HODDashboard from "./components/dashboard/HODDashboard";
+import TodosPage from "./pages/TodosPage";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/rm-dashboard" element={<RMDashboard />} />
           <Route path="/tl-dashboard" element={<TLDashboard />} />
           <Route path="/hod-dashboard" element={<HODDashboard />} />
+          <Route path="/todos" element={<TodosPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
